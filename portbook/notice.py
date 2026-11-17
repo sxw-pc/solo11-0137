@@ -9,14 +9,18 @@ def current(db, voyage):
 def decide(db, voyage):
     rows = db.execute('SELECT r.*,e.raw FROM revisions r JOIN evidence e ON e.event_id=r.event_id WHERE voyage=? AND r.event_id NOT IN (SELECT target_event_id FROM withdrawals) ORDER BY revision DESC,event_id', (voyage,)).fetchall()
     if not rows:
-        return None
-    highest = rows[0]['revision']
-    top = [r for r in rows if r['revision'] == highest]
-    if len({r['digest'] for r in top}) > 1:
-        state, reason, chosen = 'conflict', 'parallel revision digest conflict', None
+        ever=db.execute('SELECT max(revision) FROM revisions WHERE voyage=?',(voyage,)).fetchone()[0]
+        if ever is None: return None
+        highest=ever
+        state,reason,chosen='withdrawn','all authorized revisions withdrawn',None
     else:
-        chosen = top[0]
-        state, reason = ('cancelled', 'signed cancellation') if chosen['cancelled'] else ('accepted', 'authorized revision')
+        highest = rows[0]['revision']
+        top = [r for r in rows if r['revision'] == highest]
+        if len({r['digest'] for r in top}) > 1:
+            state, reason, chosen = 'conflict', 'parallel revision digest conflict', None
+        else:
+            chosen = top[0]
+            state, reason = ('cancelled', 'signed cancellation') if chosen['cancelled'] else ('accepted', 'authorized revision')
     old = current(db, voyage)
     if old and old['state'] == state and old['reason'] == reason and old['event_id'] == (chosen['event_id'] if chosen else None):
         return dict(old)

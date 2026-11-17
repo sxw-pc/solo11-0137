@@ -100,6 +100,20 @@ class PortBookTest(unittest.TestCase):
         notice.import_data(self.db,{'notices':[cancel]})
         self.assertEqual(self.db.execute("SELECT state FROM allocations WHERE id='a1'").fetchone()[0],'disputed')
         self.assertEqual(self.db.execute("SELECT count(*) FROM occupancy WHERE voyage='V1'").fetchone()[0],1)
+    def test_all_revisions_withdrawn_release_plan(self):
+        self.ready()
+        item={'event_id':'withdraw-n1','target_event_id':'n1','signer':'harbor-office','issued_at':'2026-11-16T13:00:00','reason':'source correction'}
+        notice.import_data(self.db,{'withdrawals':[item]})
+        self.assertEqual(self.db.execute("SELECT state FROM notice_decisions WHERE voyage='V1'").fetchone()[0],'withdrawn')
+        self.assertEqual(self.db.execute("SELECT state FROM allocations WHERE id='a1'").fetchone()[0],'released')
+        plan=fixture('resources-ok.json')['applications'][0].copy();plan['id']='a1-new'
+        self.assertEqual(resources.import_data(self.db,{'applications':[plan]})[0]['reason'],'notice not accepted')
+    def test_conflicting_port_witnesses_are_disputed(self):
+        self.ready()
+        data=fixture('arrival-bad.json')
+        data['witnesses'].append({'event_id':'wp-early','voyage':'V1','actor':'second-port-gate','role':'port','at':'2026-11-17T09:02:00'})
+        self.assertEqual(arrival.import_data(self.db,data)[0]['state'],'disputed')
+        self.assertEqual(self.db.execute("SELECT state FROM allocations WHERE id='a1'").fetchone()[0],'confirmed')
     def test_announcement_revision_releases_future_slot(self):
         self.ready()
         data=fixture('notices-ok.json')

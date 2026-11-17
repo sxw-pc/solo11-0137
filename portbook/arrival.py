@@ -23,13 +23,16 @@ def import_data(db,data):
 def decide(db,voyage,grace_minutes=30):
     rows=db.execute('SELECT * FROM witnesses WHERE voyage=? ORDER BY at,event_id',(voyage,)).fetchall()
     agent=next((r for r in rows if r['role']=='agent'),None)
-    port=next((r for r in rows if r['role']=='port' and (not agent or r['actor']!=agent['actor'])),None)
+    ports=[r for r in rows if r['role']=='port' and (not agent or r['actor']!=agent['actor'])]
+    port=ports[0] if ports else None
     actual=db.execute('SELECT * FROM occupancy WHERE voyage=? ORDER BY start DESC',(voyage,)).fetchone()
     allocation=db.execute("SELECT * FROM allocations WHERE voyage=? AND state='confirmed' ORDER BY start LIMIT 1",(voyage,)).fetchone()
     if not allocation:
         state,reason='disputed','physical occupancy without valid plan' if actual else 'no valid allocation'
     elif not port or not agent:
         state,reason='pending','independent agent and port witness required'
+    elif len(ports)>1 and (datetime.fromisoformat(ports[-1]['at'])-datetime.fromisoformat(ports[0]['at'])).total_seconds()>300:
+        state,reason='disputed','conflicting independent port witness times'
     else:
         deadline=datetime.fromisoformat(allocation['start'])+timedelta(minutes=grace_minutes)
         if datetime.fromisoformat(port['at'])>deadline:
