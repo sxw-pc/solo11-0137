@@ -1,0 +1,1 @@
+{"acks":[{"event_id":"ack-1","command_id":"cmd-1","voyage":"V1","actor":"pilot-1","response":"received","received_at":"2026-03-10T08:01:00+00:00"}]}

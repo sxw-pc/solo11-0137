@@ -1,0 +1,1 @@
+{"grace_minutes":30,"witnesses":[{"event_id":"wa1","voyage":"V1","actor":"shipping-agent","role":"agent","at":"2026-11-17T09:03:00"},{"event_id":"wp1","voyage":"V1","actor":"port-gate","role":"port","at":"2026-11-17T09:05:00"}],"occupancies":[{"event_id":"o1","voyage":"V1","berth":"B1","start":"2026-11-17T09:05:00","end":"2026-11-17T09:55:00"}]}
