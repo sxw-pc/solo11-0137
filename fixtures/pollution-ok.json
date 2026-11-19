@@ -1,0 +1,1 @@
+{"limits":[{"event_id":"limit-p1","station":"P1","marker":"oil","version":1,"ceiling":0.4,"signer":"harbor-lab"}],"samples":[{"event_id":"sample-p1","station":"P1","marker":"oil","sampled_at":"2026-03-10T08:15:00+00:00","reading":0.7,"laboratory":"lab-a"}]}
