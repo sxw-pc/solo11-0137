@@ -1,0 +1,22 @@
+{
+  "handoffs": [
+    {
+      "event_id": "h1",
+      "container_id": "BOX-1",
+      "from_party": "ship",
+      "to_party": "terminal-A",
+      "terminal": "A",
+      "at": "2026-11-17T09:00:00",
+      "seal": "S1"
+    },
+    {
+      "event_id": "h2",
+      "container_id": "BOX-1",
+      "from_party": "terminal-A",
+      "to_party": "truck-8",
+      "terminal": "A",
+      "at": "2026-11-17T10:00:00",
+      "seal": "S1"
+    }
+  ]
+}
