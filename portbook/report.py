@@ -1,6 +1,6 @@
 import json
 
-TABLES=['evidence','notice_decisions','windows','window_history','allocations','fulfilments','occupancy','decision_log']
+TABLES=['evidence','notice_decisions','windows','window_history','allocations','fulfilments','occupancy','delegations','delegation_items','decision_log']
 def build(db):
     out={name:[dict(row) for row in db.execute(f'SELECT * FROM {name} ORDER BY 1')] for name in TABLES}
     for item in out['evidence']:
@@ -13,7 +13,8 @@ def audit(db):
     from .store import connect
     from . import notice, waterway, resources, arrival
     handlers={'notice-import':notice.import_data,'waterway-import':waterway.import_data,
-              'resource-plan':resources.import_data,'arrival-import':arrival.import_data}
+              'resource-plan':resources.import_data,'arrival-import':arrival.import_data,
+              'group-dispatch':resources.import_delegations}
     journal=db.execute('SELECT * FROM journal ORDER BY id').fetchall()
     if not journal: return {'journal_count':0,'replay_ok':False,'reason':'no CLI source files to replay'}
     fresh=connect(':memory:')
@@ -23,12 +24,16 @@ def audit(db):
             if hashlib.sha256(entry['raw']).hexdigest()!=entry['sha']:
                 return {'journal_count':len(journal),'replay_ok':False,'reason':'raw source file hash mismatch'}
             handlers[entry['command']](fresh,json.loads(entry['raw']))
-        tables=['notice_decisions','windows','allocations','fulfilments','occupancy']
+        tables=['notice_decisions','windows','allocations','fulfilments','occupancy','delegations','delegation_items']
+        columns={
+            'fulfilments':'voyage,state,reason,allocation_id,witness_id',
+            'delegations':'id,kind,sha,state,reason,candidate_ids,selected_ids,evidence_id',
+        }
         mismatches=[]
         for name in tables:
-            columns='voyage,state,reason,allocation_id,witness_id' if name=='fulfilments' else '*'
-            left=[tuple(row) for row in db.execute(f'SELECT {columns} FROM {name} ORDER BY 1')]
-            right=[tuple(row) for row in fresh.execute(f'SELECT {columns} FROM {name} ORDER BY 1')]
+            select=columns.get(name,'*')
+            left=[tuple(row) for row in db.execute(f'SELECT {select} FROM {name} ORDER BY 1')]
+            right=[tuple(row) for row in fresh.execute(f'SELECT {select} FROM {name} ORDER BY 1')]
             if left!=right: mismatches.append(name)
         return {'journal_count':len(journal),'replay_ok':not mismatches,'mismatches':mismatches}
     finally:

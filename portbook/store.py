@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS allocations(id TEXT PRIMARY KEY, voyage TEXT NOT NULL
 CREATE TABLE IF NOT EXISTS witnesses(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id), voyage TEXT NOT NULL, actor TEXT NOT NULL, role TEXT NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS occupancy(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id), voyage TEXT NOT NULL, berth TEXT NOT NULL, start TEXT NOT NULL, end TEXT);
 CREATE TABLE IF NOT EXISTS fulfilments(voyage TEXT PRIMARY KEY, state TEXT NOT NULL, reason TEXT NOT NULL, allocation_id TEXT, witness_id TEXT, updated_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS delegations(id TEXT PRIMARY KEY, kind TEXT NOT NULL, sha TEXT NOT NULL, state TEXT NOT NULL, reason TEXT NOT NULL, candidate_ids TEXT NOT NULL, selected_ids TEXT NOT NULL, evidence_id TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS delegation_items(delegation_id TEXT NOT NULL, allocation_id TEXT NOT NULL, state TEXT NOT NULL, reason TEXT NOT NULL, notice_version INTEGER, window_version INTEGER, PRIMARY KEY(delegation_id,allocation_id));
 CREATE TABLE IF NOT EXISTS decision_log(id INTEGER PRIMARY KEY, subsystem TEXT NOT NULL, object_id TEXT NOT NULL, state TEXT NOT NULL, reason TEXT NOT NULL, evidence_id TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 """
 

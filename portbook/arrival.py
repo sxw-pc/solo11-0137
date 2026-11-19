@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from .source import record
 from .store import log
-from .resources import invalidate_voyage, promote
+from .resources import invalidate_voyage, promote, dispatch_request, preview_group
 
 def import_data(db,data):
     out=[]
@@ -18,7 +18,16 @@ def import_data(db,data):
                            (o['event_id'],o['voyage'],o['berth'],o['start'],o.get('end')))
         for voyage in sorted({w['voyage'] for w in data.get('witnesses',[])} | {o['voyage'] for o in data.get('occupancies',[])}):
             out.append(decide(db,voyage,data.get('grace_minutes',30)))
+        # A release produced by this batch may be followed by a one-shot
+        # group dispatch; the delegation verdict is committed in the same
+        # transaction and is itself idempotent on re-import.
+        for request in data.get('delegations',[]):
+            out.append(dispatch_request(db,request))
     return out
+
+def preview_dispatch(db,request):
+    """Read-only view of the overall feasible group plan before confirmation."""
+    return preview_group(db,request)
 
 def decide(db,voyage,grace_minutes=30):
     rows=db.execute('SELECT * FROM witnesses WHERE voyage=? ORDER BY at,event_id',(voyage,)).fetchall()

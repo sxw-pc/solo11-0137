@@ -6,7 +6,8 @@ from .source import read,record_file
 from . import notice,waterway,resources,arrival,report
 
 HANDLERS={'notice-import':notice.import_data,'waterway-import':waterway.import_data,
-          'resource-plan':resources.import_data,'arrival-import':arrival.import_data}
+          'resource-plan':resources.import_data,'arrival-import':arrival.import_data,
+          'group-dispatch':resources.import_delegations}
 
 def main():
     parser=argparse.ArgumentParser(prog='portbook')
