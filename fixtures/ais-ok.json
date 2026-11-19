@@ -1,0 +1,22 @@
+{
+  "pings": [
+    {
+      "event_id": "ais-1",
+      "mmsi": "412000001",
+      "voyage": "V1",
+      "at": "2026-11-17T08:50:00",
+      "lat": 31.2,
+      "lon": 121.5,
+      "receiver": "east"
+    },
+    {
+      "event_id": "ais-2",
+      "mmsi": "412000001",
+      "voyage": "V1",
+      "at": "2026-11-17T09:00:00",
+      "lat": 31.21,
+      "lon": 121.51,
+      "receiver": "west"
+    }
+  ]
+}
