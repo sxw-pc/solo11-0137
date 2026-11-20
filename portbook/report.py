@@ -1,19 +1,27 @@
 import json
 
-TABLES=['evidence','notice_decisions','windows','window_history','allocations','fulfilments','occupancy','decision_log']
+TABLES=['evidence','notice_decisions','windows','window_history','allocations','fulfilments','occupancy','decision_log',
+        'radio_order','radio_ack','radio_case','radio_authority','radio_directive','radio_receipt','radio_cert','radio_personal']
 def build(db):
     out={name:[dict(row) for row in db.execute(f'SELECT * FROM {name} ORDER BY 1')] for name in TABLES}
     for item in out['evidence']:
         item['raw']=item['raw'].decode('utf8')
+    release={'effective':[],'possible':[],'vetoed':[]}
+    for row in db.execute('SELECT * FROM radio_cert ORDER BY voyage,command_id'):
+        release[row['state']].append({'voyage':row['voyage'],'command_id':row['command_id'],
+            'revision':row['revision'],'digest':row['digest'],'commit_event':row['commit_event'],
+            'reason':row['reason'],'edges':json.loads(row['edges'])})
+    out['radio_release']=release
     return out
 def render(db):
     return json.dumps(build(db),ensure_ascii=False,indent=2,default=lambda x:x.decode('utf8') if isinstance(x,bytes) else str(x))
 
 def audit(db):
     from .store import connect
-    from . import notice, waterway, resources, arrival
+    from . import notice, waterway, resources, arrival, radio, radio_ack
     handlers={'notice-import':notice.import_data,'waterway-import':waterway.import_data,
-              'resource-plan':resources.import_data,'arrival-import':arrival.import_data}
+              'resource-plan':resources.import_data,'arrival-import':arrival.import_data,
+              'radio-order-import':radio.import_data,'radio-ack-import':radio_ack.import_data}
     journal=db.execute('SELECT * FROM journal ORDER BY id').fetchall()
     if not journal: return {'journal_count':0,'replay_ok':False,'reason':'no CLI source files to replay'}
     fresh=connect(':memory:')
@@ -23,7 +31,8 @@ def audit(db):
             if hashlib.sha256(entry['raw']).hexdigest()!=entry['sha']:
                 return {'journal_count':len(journal),'replay_ok':False,'reason':'raw source file hash mismatch'}
             handlers[entry['command']](fresh,json.loads(entry['raw']))
-        tables=['notice_decisions','windows','allocations','fulfilments','occupancy']
+        tables=['notice_decisions','windows','allocations','fulfilments','occupancy',
+                'radio_case','radio_cert','radio_personal']
         mismatches=[]
         for name in tables:
             columns='voyage,state,reason,allocation_id,witness_id' if name=='fulfilments' else '*'

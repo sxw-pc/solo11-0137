@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS decision_log(id INTEGER PRIMARY KEY, subsystem TEXT N
 CREATE TABLE IF NOT EXISTS radio_order(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),command_id TEXT NOT NULL,voyage TEXT NOT NULL,revision INTEGER NOT NULL,action TEXT NOT NULL,issuer TEXT NOT NULL,issued_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS radio_ack(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),command_id TEXT NOT NULL,voyage TEXT NOT NULL,actor TEXT NOT NULL,response TEXT NOT NULL,received_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS radio_case(voyage TEXT PRIMARY KEY,command_id TEXT,order_event TEXT,ack_event TEXT,state TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS radio_authority(issuer TEXT NOT NULL,scope TEXT NOT NULL,valid_from TEXT NOT NULL,valid_to TEXT NOT NULL,PRIMARY KEY(issuer,scope));
+CREATE TABLE IF NOT EXISTS radio_directive(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),command_id TEXT NOT NULL,voyage TEXT NOT NULL,revision INTEGER NOT NULL,phase TEXT NOT NULL,action TEXT NOT NULL,digest TEXT NOT NULL,issuer TEXT NOT NULL,scope TEXT NOT NULL,parents TEXT NOT NULL,issued_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS radio_receipt(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),command_id TEXT NOT NULL,voyage TEXT NOT NULL,order_event TEXT NOT NULL,digest TEXT NOT NULL,actor TEXT NOT NULL,role TEXT NOT NULL,response TEXT NOT NULL,sender_seq INTEGER NOT NULL,receiver_seq INTEGER NOT NULL,parents TEXT NOT NULL,received_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS radio_cert(voyage TEXT NOT NULL,command_id TEXT NOT NULL,state TEXT NOT NULL,reason TEXT NOT NULL,revision INTEGER,digest TEXT,commit_event TEXT,edges TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(voyage,command_id));
+CREATE TABLE IF NOT EXISTS radio_personal(voyage TEXT NOT NULL,actor TEXT NOT NULL,state TEXT NOT NULL,reason TEXT NOT NULL,last_order_event TEXT,last_response TEXT,last_seq INTEGER,version INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(voyage,actor));
 """
 
 def connect(path):
