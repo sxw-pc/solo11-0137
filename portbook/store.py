@@ -20,7 +20,13 @@ CREATE TABLE IF NOT EXISTS occupancy(event_id TEXT PRIMARY KEY REFERENCES eviden
 CREATE TABLE IF NOT EXISTS fulfilments(voyage TEXT PRIMARY KEY, state TEXT NOT NULL, reason TEXT NOT NULL, allocation_id TEXT, witness_id TEXT, updated_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS decision_log(id INTEGER PRIMARY KEY, subsystem TEXT NOT NULL, object_id TEXT NOT NULL, state TEXT NOT NULL, reason TEXT NOT NULL, evidence_id TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS power_reading(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),meter_id TEXT NOT NULL,voyage TEXT NOT NULL,at TEXT NOT NULL,kwh_total INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS power_account(voyage TEXT PRIMARY KEY,kwh INTEGER,state TEXT NOT NULL,reason TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS power_account(voyage TEXT PRIMARY KEY,kwh INTEGER,state TEXT NOT NULL,reason TEXT NOT NULL,kwh_min REAL,kwh_max REAL,basis TEXT);
+CREATE TABLE IF NOT EXISTS power_contract(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),voyage TEXT NOT NULL,kind TEXT NOT NULL,berth TEXT,weight REAL,load_cap REAL,signed_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS power_transformer(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),meter_id TEXT NOT NULL,berths TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS transformer_reading(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),meter_id TEXT NOT NULL,at TEXT NOT NULL,kwh_total INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS power_outage(event_id TEXT PRIMARY KEY REFERENCES evidence(event_id),meter_id TEXT NOT NULL,start TEXT NOT NULL,end TEXT NOT NULL,resumed_by TEXT REFERENCES transformer_reading(event_id));
+CREATE TABLE IF NOT EXISTS power_segment(id TEXT PRIMARY KEY,meter_id TEXT NOT NULL,start TEXT NOT NULL,end TEXT NOT NULL,increment REAL,trusted INTEGER NOT NULL,reason TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS power_attribution(id TEXT PRIMARY KEY,segment_id TEXT REFERENCES power_segment(id),voyage TEXT,recipient TEXT NOT NULL,start TEXT NOT NULL,end TEXT NOT NULL,kwh REAL NOT NULL,kwh_max REAL NOT NULL,basis TEXT NOT NULL,evidence_id TEXT);
 """
 
 def connect(path):

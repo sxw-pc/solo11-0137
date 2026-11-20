@@ -1,6 +1,6 @@
 import json
 
-TABLES=['evidence','notice_decisions','windows','window_history','allocations','fulfilments','occupancy','power_reading','power_account','decision_log']
+TABLES=['evidence','notice_decisions','windows','window_history','allocations','fulfilments','occupancy','power_reading','power_account','power_contract','power_transformer','transformer_reading','power_outage','power_segment','power_attribution','decision_log']
 def build(db):
     out={name:[dict(row) for row in db.execute(f'SELECT * FROM {name} ORDER BY 1')] for name in TABLES}
     for item in out['evidence']:
@@ -24,7 +24,7 @@ def audit(db):
             if hashlib.sha256(entry['raw']).hexdigest()!=entry['sha']:
                 return {'journal_count':len(journal),'replay_ok':False,'reason':'raw source file hash mismatch'}
             handlers[entry['command']](fresh,json.loads(entry['raw']))
-        tables=['notice_decisions','windows','allocations','fulfilments','occupancy','power_account']
+        tables=['notice_decisions','windows','allocations','fulfilments','occupancy','power_account','power_contract','power_transformer','transformer_reading','power_outage','power_segment','power_attribution']
         mismatches=[]
         for name in tables:
             columns='voyage,state,reason,allocation_id,witness_id' if name=='fulfilments' else '*'

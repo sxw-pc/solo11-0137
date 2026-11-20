@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from .source import record
 from .store import log
 from .resources import invalidate_voyage, promote
+from . import power
 
 def import_data(db,data):
     out=[]
@@ -16,8 +17,15 @@ def import_data(db,data):
             if new:
                 db.execute('INSERT INTO occupancy(event_id,voyage,berth,start,end) VALUES(?,?,?,?,?)',
                            (o['event_id'],o['voyage'],o['berth'],o['start'],o.get('end')))
-        for voyage in sorted({w['voyage'] for w in data.get('witnesses',[])} | {o['voyage'] for o in data.get('occupancies',[])}):
+        touched=sorted({w['voyage'] for w in data.get('witnesses',[])} | {o['voyage'] for o in data.get('occupancies',[])})
+        for voyage in touched:
             out.append(decide(db,voyage,data.get('grace_minutes',30)))
+        # Occupancy is the actual connection evidence: importing or correcting
+        # it must re-run the power attribution for every affected voyage.  A
+        # shared transformer also moves the bills of the other ships on it.
+        recomputed=set()
+        for voyage in {o['voyage'] for o in data.get('occupancies',[])}:
+            power.decide(db,voyage,_recomputed=recomputed)
     return out
 
 def decide(db,voyage,grace_minutes=30):
